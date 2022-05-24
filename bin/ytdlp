@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [ "$1" == "-q" ]
+then
+	query=$(echo -n "$2" | tr ' ' '+')
+	link=$(curl -s "https://vid.puffyan.us/search?q=$query" | grep -Eo "watch\?v=.{11}" | head -n 1)
+	link="https://youtube.com/$link"
+elif [ "$1" == "-l" ]
+then
+	link=$2
+elif [ "$2" == "" ]
+then
+	link=$1
+fi
+
+yt-dlp -P "~/Downloads/vids" -o "%(title)s" "$link"

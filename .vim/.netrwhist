@@ -1,0 +1,12 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =3
+let g:netrw_dirhist_3='/usr/share/X11/xkb/symbols'
+let g:netrw_dirhist_2='/usr/share/xsessions'
+let g:netrw_dirhist_1='/home/aluc/.tmux/plugins/tmux-copycat'
+let g:netrw_dirhist_0='/home/aluc/.tmux'
+let g:netrw_dirhist_9='/usr/share/qutebrowser/userscripts'
+let g:netrw_dirhist_8='/usr/share/qutebrowser'
+let g:netrw_dirhist_7='/usr/share/qutebrowser/userscripts'
+let g:netrw_dirhist_6='/usr/share/qutebrowser'
+let g:netrw_dirhist_5='/home/luca/.config/qutebrowser'
+let g:netrw_dirhist_4='/usr/share/gnome-shell/theme'

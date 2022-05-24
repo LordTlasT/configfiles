@@ -1,0 +1,123 @@
+#!/bin/bash
+
+# Displays help
+Help (){
+  echo -- This is a mounter++ --
+  echo
+  echo "Usage: mounter++.sh [OPTION]"
+  echo "  -h   display this help and exit"
+  echo
+  echo WITHOUT OPTIONS:
+  echo "   All filesystems are mounted with "
+  echo "   -o umask=0022,gid=1000,uid=1000"
+  echo "   Ignoring disk mounted on root"
+  echo "   and 0B fs."
+  echo
+  echo ERRORS:
+  echo "   If mounting fails it will be tried again"
+  echo "   without any options."
+  exit
+}
+
+# Handles options -h
+while getopts ":vh" option
+do
+  case $option in
+    h) # Prints help message
+      Help
+      ;;
+    *) # Invalid option
+      echo "Invalid option."
+      Help
+      ;;
+  esac
+done
+
+# Takes a disk and searches for a label then mounts
+MountFunction(){
+
+  # Searches for label with given disk
+  # Label would be a string next to '$' = EOline char
+  label=$(lsblk -o name,label | grep "$1" | grep -Eo "[[:alnum:]]*$")
+  if [ -z "$label" ]
+  then
+    # If no label is found label=disk
+    label=$1
+  fi
+
+  # If a mountpoint exists for the FS exit function.
+  if [ "$(lsblk -o name,mountpoint | grep "$label" | grep "/")" != "" ]
+  then
+    echo $1 already mounted on $(lsblk -o name,mountpoint | grep "$label" | cut -d " " -f 2).
+    return
+  fi
+
+  echo Mounting $1 on /media/$label
+
+  # Mounting the file system, if error occured retrying with no options.
+  sudo mkdir -p /media/"$label"
+  sudo mount -o umask=0022,gid=1000,uid=1000 /dev/"$1" /media/"$label" \
+    || \
+    echo Retrying: \(see help\)\
+    && sudo mount /dev/"$1" /media/"$label"
+  echo Finished.
+}
+
+
+########################################
+####### Actual start of script #########
+#######                        #########
+########################################
+
+
+# Find what disk the system is mounted on, so it can ignore it later
+disk_root=$(lsblk -o name,mountpoint | grep "/$" | grep -o "sd.")
+echo Root is mounted on $disk_root
+echo
+
+# Make a list of devices prone to mounting
+# Ignore $disk_root and 0B FS
+lsblk -o name,type,size \
+  | grep -v "$disk_root" \
+  | grep -v 0B$ \
+  | grep "disk\|part" \
+  > could_be_mounted_list
+
+# Make a list with only the names of the devices
+cat could_be_mounted_list \
+  | grep -o "^sd.." \
+  > could_be_mounted_list-names
+
+# For each device=disk
+while read -r disk
+do
+  # See if it has partitions, name will have multiple matches
+  nb_matches=$(\
+    cat could_be_mounted_list \
+    | grep $disk \
+    | wc -l)
+
+  # Make a list of the partitions
+  cat could_be_mounted_list \
+    | grep -o "$disk[0-9]" \
+    > could_be_mounted_list_partitions
+
+  # If it has only one partition
+  if [ $nb_matches -eq 1 ]
+  then
+    echo "$disk" > could_be_mounted_list_partitions
+  fi
+
+  # For each partition=part
+  while read -r part
+  do
+    MountFunction $part
+  done < could_be_mounted_list_partitions
+
+  echo
+done < could_be_mounted_list-names
+
+echo Done.
+
+# Clean all those files
+rm could_be_mounted_list could_be_mounted_list-names could_be_mounted_list_partitions

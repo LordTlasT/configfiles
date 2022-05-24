@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo -n $(cat /tmp/tmpclip.txt | dmenu -p '>' -l 6 -fn 'xft:Ubuntu Mono:pixelsize=18' -nb '#002434' -nf '#2aa198' -sb '#002b36' -sf '#eee8d5' -l 5) | xclip -selection clipboard

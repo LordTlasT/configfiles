@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Find what disk the system is mounted on, so it can ignore it later
+disk_root=$(lsblk -o name,mountpoint | grep "/$" | grep -o "sd.")
+echo Root is mounted on $disk_root
+echo
+
+lsblk -o name,type,size \
+  | grep -v "$disk_root" \
+  | grep -v 0B$ \
+  | grep "disk" \
+  | cut -d ' ' -f 1 \
+  > .could_be_ejected_list
+
+while read -r input
+do
+  echo Ejecting /dev/$input
+  sudo eject /dev/"$input"
+  echo
+done < .could_be_ejected_list
+rm .could_be_ejected_list

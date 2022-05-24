@@ -1,0 +1,11 @@
+mew
+w ~/.config/cmus/save
+wq
+win-sel-cur
+mark
+set option={path}
+set option=%F
+set option=%f
+q
+shell 
+save
